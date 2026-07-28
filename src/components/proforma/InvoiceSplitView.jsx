@@ -1,4 +1,6 @@
-﻿import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { saveProforma, getProforma, updateProforma } from "../../api/proformaInvoiceApi";
 
 // ---------- helpers ----------
 const inr2 = (n) => (isNaN(n) ? 0 : n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -90,10 +92,30 @@ function TextArea(props) {
 }
 
 export default function InvoiceSplitView() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState(initialData);
+  const [docId, setDocId] = useState(id || null);
+  const docIdRef = useRef(id || null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [logo, setLogo] = useState(null);
+  const [mobileTab, setMobileTab] = useState("form");
+  const autoSaveTimer = useRef(null);
+  const isFirstRender = useRef(true);
+  const skipNextAutosave = useRef(false);
+
+  // Load existing proforma when editing
+  useEffect(() => {
+    if (!id) return;
+    getProforma(id).then((p) => {
+      const { _id, totals, amountInWords: _w, createdAt, updatedAt, __v, ...rest } = p;
+      setData({ ...initialData, ...rest });
+      setDocId(_id);
+      docIdRef.current = _id;
+      skipNextAutosave.current = true;
+    }).catch(() => setSaveMsg("Failed to load invoice"));
+  }, [id]);
 
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
@@ -146,26 +168,68 @@ export default function InvoiceSplitView() {
 
   const amountInWords = "RUPEES - " + numberToWordsLakh(calc.rounded) + " ONLY.";
 
-  const handlePrint = () => window.print();
-  const handleSave = async () => {
+  // Autosave: debounce 2s after every data change
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (skipNextAutosave.current) { skipNextAutosave.current = false; return; }
+    clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => { doSave(); }, 2000);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [data]);
+
+  const doSave = async () => {
     setSaving(true); setSaveMsg("");
     try {
-      const res = await fetch("/api/proforma-invoices", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, totals: calc, amountInWords }),
-      });
-      if (!res.ok) throw new Error();
+      const payload = { ...data, totals: calc, amountInWords };
+      if (docIdRef.current) {
+        await updateProforma(docIdRef.current, payload);
+      } else {
+        const saved = await saveProforma(payload);
+        setDocId(saved._id);
+        docIdRef.current = saved._id;
+      }
       setSaveMsg("Saved ✓");
-    } catch { setSaveMsg("Save failed — check backend connection"); }
+    } catch { setSaveMsg("Save failed"); }
     finally { setSaving(false); setTimeout(() => setSaveMsg(""), 3000); }
   };
 
+  const handlePrint = () => window.print();
+  const handleSave = () => doSave();
+
   return (
-    <div className="flex h-screen bg-gray-100 font-sans print:block print:h-auto print:bg-white">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100 font-sans print:block print:h-auto print:bg-white">
+
+      {/* MOBILE TAB BAR */}
+      <div className="md:hidden flex border-b border-gray-300 bg-white print:hidden shrink-0">
+        <button
+          onClick={() => setMobileTab("form")}
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+            mobileTab === "form" ? "text-blue-900 border-b-2 border-blue-900" : "text-gray-500"
+          }`}
+        >
+          Form
+        </button>
+        <button
+          onClick={() => setMobileTab("preview")}
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+            mobileTab === "preview" ? "text-blue-900 border-b-2 border-blue-900" : "text-gray-500"
+          }`}
+        >
+          Preview
+        </button>
+      </div>
+
       {/* LEFT: FORM */}
-      <div className="w-[400px] shrink-0 overflow-y-auto bg-white border-r border-gray-300 p-4 print:hidden">
+      <div className={`${
+        mobileTab === "form" ? "flex" : "hidden"
+      } md:flex flex-col w-full md:w-[400px] shrink-0 overflow-y-auto bg-white border-r border-gray-300 p-4 print:hidden`}>
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
-          <span className="font-bold text-base text-gray-800">Invoice Details</span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-gray-800 text-lg leading-none">&larr;</button>
+            <span className="font-bold text-base text-gray-800">{docId ? 'Edit Proforma' : 'New Proforma'}</span>
+          </div>
+          {saving && <span className="text-[11px] text-blue-600 font-medium">Saving…</span>}
+          {!saving && saveMsg && <span className="text-[11px] text-green-600 font-medium">{saveMsg}</span>}
         </div>
 
         <div className="mb-4">
@@ -341,8 +405,10 @@ export default function InvoiceSplitView() {
       </div>
 
       {/* RIGHT: LIVE PREVIEW */}
-      <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center print:p-0">
-        <div className="flex justify-between items-center mb-4 w-[900px] print:hidden">
+      <div className={`${
+        mobileTab === "preview" ? "flex" : "hidden"
+      } md:flex flex-1 overflow-y-auto p-2 md:p-6 flex-col items-center print:p-0`}>
+        <div className="flex justify-between items-center mb-4 w-full max-w-[900px] print:hidden">
           <span className="font-bold text-base text-gray-800">Live Preview</span>
           <div className="flex gap-2 items-center">
             {saveMsg && <span className="text-xs text-green-700 font-semibold bg-green-50 px-2 py-1 rounded-md">{saveMsg}</span>}
@@ -362,7 +428,7 @@ export default function InvoiceSplitView() {
           </div>
         </div>
 
-        <div className="w-[900px] bg-white border border-black text-xs text-gray-900 print:w-auto print-area">
+        <div className="w-full max-w-[900px] bg-white border border-black text-xs text-gray-900 print:w-auto print-area">
           <div className="flex justify-between items-center px-4 py-3 border-b border-black">
             <div>
               <div className="text-[11px] font-medium">Authorised Dealer</div>
