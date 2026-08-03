@@ -37,18 +37,27 @@ const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "s
 const highlightAccountNumber = (text) => {
   if (!text) return text;
   const token = "44106179887";
+  const label = "BankAccountNo";
   const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const parts = text.split(new RegExp(`(${escapedToken})`, "gi"));
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedLabel}|${escapedToken})`, "gi");
+  const parts = text.split(regex);
 
-  return parts.map((part, index) =>
-    part.toLowerCase() === token.toLowerCase() ? (
-      <span key={`${part}-${index}`} className="font-semibold text-gray-900">
-        {part}
-      </span>
-    ) : (
-      <span key={`${part}-${index}`}>{part}</span>
-    )
-  );
+  return parts.map((part, index) => {
+    const normalized = part.toLowerCase();
+    const isToken = normalized === token.toLowerCase();
+    const isLabel = normalized === label.toLowerCase();
+
+    if (isToken || isLabel) {
+      return (
+        <b key={`${part}-${index}`} style={{ fontWeight: 700 }}>
+          {part}
+        </b>
+      );
+    }
+
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
 };
 
 const initialData = {
