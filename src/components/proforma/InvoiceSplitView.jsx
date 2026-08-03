@@ -34,6 +34,23 @@ function numberToWordsLakh(num) {
 
 const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
+const highlightAccountNumber = (text) => {
+  if (!text) return text;
+  const token = "44106179887";
+  const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escapedToken})`, "gi"));
+
+  return parts.map((part, index) =>
+    part.toLowerCase() === token.toLowerCase() ? (
+      <span key={`${part}-${index}`} className="font-semibold text-gray-900">
+        {part}
+      </span>
+    ) : (
+      <span key={`${part}-${index}`}>{part}</span>
+    )
+  );
+};
+
 const initialData = {
   refNo: "",
   date: today,
@@ -49,7 +66,7 @@ const initialData = {
   tcsPercent: 1,
   roundedTotal: "",
   otherTerms: "Prices quoted are on Works Varanasi basis and duties shall be as above, and also are inclusive of transportation, transit insurance, octroi, entry tax, registration, road tax and any other levies. All such levies will be extra to our account. Any change in the excise duty and other statutory levies, as applicable at the time of billing will be extra to customer's account.",
-  delivery: "EX works Gorakhpur within 1-2 weeks from the date of firm and clear order.",
+  delivery: "EX works Gorakhpur within 1-3 weeks from the date of firm and clear order.",
   freight: "Delivery at site",
   paymentTerms: "100% Payment should be made in advance against in the form of Financier DO (With mention of payment to MKS ALLIANCE LLP immediately against the submission of Invoice Copy) drawn in favor of MKS ALLIANCE LLP.\nBeneficiary Name: MKS ALLIANCE LLP.\nBankAccountNo:44106179887 IFSC Code: SBIN0017640 Bank Name: STATE BANK OF INDIA, RAMGARH GORAKHPUR PIN:273017",
   validity: "15days",
@@ -58,8 +75,8 @@ const initialData = {
   footerCompany: "MKS ALLIANCE LLP",
   footerAddress: "TARA MANDAL ROAD SIDDHARTH ENCLAVE SUB POST OFFICE RAMGARH GORAKHPUR (U.P.)273017",
   footerGst: "GST NO.09ACCFM8309C1ZC",
-  footerEmail: "salesCE10312@dealers.escortskubota.com, mksalliancellp05@gmail.com",
-  footerMobile: "7571000264/9194702087",
+  footerEmail: "mishrasarvesh727@gmail.com mksalliancellp05@gmail.com",
+  footerMobile: "9194702095/7905180374",
 };
 
 // ---------- form field primitives (Tailwind versions) ----------
@@ -382,7 +399,9 @@ export default function InvoiceSplitView() {
           ].map(({ label, value }) => (
             <div key={label} className="mb-2">
               <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">{label}</label>
-              <div className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[12px] text-gray-600 bg-gray-50 whitespace-pre-wrap">{value}</div>
+              <div className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[12px] text-gray-600 bg-gray-50 whitespace-pre-wrap">
+                {label === "Payment Terms" ? highlightAccountNumber(value) : value}
+              </div>
             </div>
           ))}
         </div>
@@ -530,7 +549,7 @@ export default function InvoiceSplitView() {
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap', fontWeight:'600', width:'130px'}}>Other Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.otherTerms}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Delivery:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.delivery}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Freight: Extra</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.freight}</td></tr>
-            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Payment Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.paymentTerms}</td></tr>
+            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Payment Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{highlightAccountNumber(data.paymentTerms)}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Validity:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.validity}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Insurance & Rto:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.insuranceRto}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Warranty:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.warranty}</td></tr>
