@@ -1,5 +1,7 @@
 ﻿import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { saveProforma, getProforma, updateProforma } from "../../api/proformaInvoiceApi";
 
 // ---------- helpers ----------
@@ -124,12 +126,14 @@ export default function InvoiceSplitView() {
   const [docId, setDocId] = useState(id || null);
   const docIdRef = useRef(id || null);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [logo, setLogo] = useState(null);
   const [mobileTab, setMobileTab] = useState("form");
   const autoSaveTimer = useRef(null);
   const isFirstRender = useRef(true);
   const skipNextAutosave = useRef(false);
+  const printAreaRef = useRef(null);
 
   // Load existing proforma when editing
   useEffect(() => {
@@ -199,24 +203,106 @@ export default function InvoiceSplitView() {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     if (skipNextAutosave.current) { skipNextAutosave.current = false; return; }
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => { doSave(); }, 2000);
+    autoSaveTimer.current = setTimeout(() => { doSave().catch(() => {}); }, 2000);
     return () => clearTimeout(autoSaveTimer.current);
   }, [data]);
 
-  const doSave = async () => {
+  const doSave = async ({ throwOnError = false } = {}) => {
     setSaving(true); setSaveMsg("");
     try {
       const payload = { ...data, totals: calc, amountInWords };
       if (docIdRef.current) {
-        await updateProforma(docIdRef.current, payload);
+        const updated = await updateProforma(docIdRef.current, payload);
+        setSaveMsg("Saved");
+        return updated;
       } else {
         const saved = await saveProforma(payload);
         setDocId(saved._id);
         docIdRef.current = saved._id;
+        setSaveMsg("Saved");
+        return saved;
       }
-      setSaveMsg("Saved ✓");
-    } catch { setSaveMsg("Save failed"); }
+    } catch (error) {
+      setSaveMsg(`Save failed: ${error.message}`);
+      if (throwOnError) throw error;
+      return null;
+    }
     finally { setSaving(false); setTimeout(() => setSaveMsg(""), 3000); }
+  };
+
+  const getPdfFileName = () => {
+    const label = data.refNo || data.to.name || "proforma-invoice";
+    return `${label}`.trim().replace(/[^a-z0-9-]+/gi, "-").replace(/^-|-$/g, "") + ".pdf";
+  };
+
+  const createPdfBlob = async () => {
+    if (!printAreaRef.current) throw new Error("Invoice preview is not ready");
+    const canvas = await html2canvas(printAreaRef.current, {
+      backgroundColor: "#ffffff",
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      useCORS: true,
+    });
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 8;
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+    const imgWidth = usableWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgData = canvas.toDataURL("image/png");
+
+    let pageIndex = 0;
+    let remainingHeight = imgHeight;
+    while (remainingHeight > 0) {
+      if (pageIndex > 0) pdf.addPage();
+      pdf.addImage(imgData, "PNG", margin, margin - pageIndex * usableHeight, imgWidth, imgHeight);
+      remainingHeight -= usableHeight;
+      pageIndex += 1;
+    }
+
+    return pdf.output("blob");
+  };
+
+  const downloadBlob = (blob, fileName) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSharePdf = async () => {
+    setSharing(true);
+    setSaveMsg("");
+    try {
+      await doSave({ throwOnError: true });
+      const blob = await createPdfBlob();
+      const fileName = getPdfFileName();
+      const file = new File([blob], fileName, { type: "application/pdf" });
+      const message = `Sharing ${data.refNo || "proforma invoice"} from MKS Alliance LLP.`;
+
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share({ title: fileName, text: message, files: [file] });
+        setSaveMsg("PDF ready to share");
+      } else {
+        downloadBlob(blob, fileName);
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(`${message} PDF downloaded. Please attach ${fileName} in WhatsApp.`)}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
+        setSaveMsg("PDF downloaded");
+      }
+    } catch (error) {
+      setSaveMsg(`Share failed: ${error.message}`);
+    } finally {
+      setSharing(false);
+      setTimeout(() => setSaveMsg(""), 4000);
+    }
   };
 
   const handlePrint = () => window.print();
@@ -435,7 +521,7 @@ export default function InvoiceSplitView() {
       {/* RIGHT: LIVE PREVIEW */}
       <div className={`${
         mobileTab === "preview" ? "flex" : "hidden"
-      } md:flex flex-1 overflow-y-auto p-2 md:p-6 flex-col items-center print:p-0`}>
+      } md:flex flex-1 overflow-y-auto p-2 md:p-6 flex-col items-center print:flex print:p-0 print:overflow-visible`}>
         <div className="flex justify-between items-center mb-4 w-full max-w-[900px] print:hidden">
           <span className="font-bold text-base text-gray-800">Live Preview</span>
           <div className="flex gap-2 items-center">
@@ -453,10 +539,17 @@ export default function InvoiceSplitView() {
             >
               Print / PDF
             </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-green-700 text-white cursor-pointer text-sm font-semibold hover:bg-green-600 disabled:opacity-60 transition-colors"
+              onClick={handleSharePdf}
+              disabled={saving || sharing}
+            >
+              {sharing ? "Preparing…" : "Share PDF"}
+            </button>
           </div>
         </div>
 
-        <div className="w-full max-w-[900px] bg-white border border-black text-xs text-gray-900 print:w-auto print-area">
+        <div ref={printAreaRef} className="w-full max-w-[900px] bg-white border border-black text-xs text-gray-900 print:w-auto print-area">
           <div className="flex justify-between items-center px-4 py-3 border-b border-black">
             <div>
               <div className="text-[11px] font-medium">Authorised Dealer</div>

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import FormField from '../shared/FormField';
 import Toolbar from '../shared/Toolbar';
 import { getNextInvoiceNumber, saveInvoice, updateInvoice, getInvoice } from '../../api/invoiceApi';
@@ -24,6 +26,8 @@ const defaultInvoice = {
 const InvoiceEditor = ({ invoiceId }) => {
   const [invoice, setInvoice] = useState(defaultInvoice);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const printAreaRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,15 +63,88 @@ const InvoiceEditor = ({ invoiceId }) => {
     setSaving(true);
     try {
       const payload = calculateTotals(invoice);
-      invoiceId ? await updateInvoice(invoiceId, payload) : await saveInvoice(payload);
+      const saved = invoiceId ? await updateInvoice(invoiceId, payload) : await saveInvoice(payload);
+      if (!invoiceId && saved?.invoiceNumber) {
+        setInvoice((p) => ({ ...p, invoiceNumber: saved.invoiceNumber }));
+      }
       navigate('/');
     } catch (e) { alert(e.message); }
     finally { setSaving(false); }
   };
 
+  const getPdfFileName = () => {
+    const label = invoice.invoiceNumber || invoice.customerName || 'invoice';
+    return `${label}`.trim().replace(/[^a-z0-9-]+/gi, '-').replace(/^-|-$/g, '') + '.pdf';
+  };
+
+  const createPdfBlob = async () => {
+    if (!printAreaRef.current) throw new Error('Invoice preview is not ready');
+    const canvas = await html2canvas(printAreaRef.current, {
+      backgroundColor: '#ffffff',
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      useCORS: true,
+    });
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 8;
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+    const imgWidth = usableWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgData = canvas.toDataURL('image/png');
+
+    let pageIndex = 0;
+    let remainingHeight = imgHeight;
+    while (remainingHeight > 0) {
+      if (pageIndex > 0) pdf.addPage();
+      pdf.addImage(imgData, 'PNG', margin, margin - pageIndex * usableHeight, imgWidth, imgHeight);
+      remainingHeight -= usableHeight;
+      pageIndex += 1;
+    }
+
+    return pdf.output('blob');
+  };
+
+  const downloadBlob = (blob, fileName) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSharePdf = async () => {
+    setSharing(true);
+    try {
+      const blob = await createPdfBlob();
+      const fileName = getPdfFileName();
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      const message = `Sharing ${invoice.invoiceNumber || 'invoice'} from ${invoice.companyName}.`;
+
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share({ title: fileName, text: message, files: [file] });
+      } else {
+        downloadBlob(blob, fileName);
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(`${message} PDF downloaded. Please attach ${fileName} in WhatsApp.`)}`,
+          '_blank',
+          'noopener,noreferrer'
+        );
+      }
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <div>
-      <Toolbar onSave={handleSave} onPrint={() => window.print()} saving={saving} />
+      <Toolbar onSave={handleSave} onPrint={() => window.print()} onSharePdf={handleSharePdf} saving={saving} sharing={sharing} />
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
 
         {/* FORM */}
@@ -127,7 +204,7 @@ const InvoiceEditor = ({ invoiceId }) => {
         </div>
 
         {/* PREVIEW */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 print:shadow-none print:border-none">
+        <div ref={printAreaRef} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 print-area print:shadow-none print:border-none">
           <h2 className="text-base font-bold text-gray-700 mb-5 pb-3 border-b border-gray-100 print:hidden">Preview</h2>
           <div className="text-sm text-gray-800">
             <div className="flex justify-between items-start mb-6">

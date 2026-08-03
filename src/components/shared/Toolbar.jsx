@@ -1,4 +1,4 @@
-const Toolbar = ({ onSave, onPrint, saving }) => (
+const Toolbar = ({ onSave, onPrint, onSharePdf, saving, sharing }) => (
   <div className="flex gap-3 mb-6">
     <button
       type="button"
@@ -6,7 +6,7 @@ const Toolbar = ({ onSave, onPrint, saving }) => (
       disabled={saving}
       className="bg-blue-900 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-800 disabled:opacity-60 transition-colors"
     >
-      {saving ? 'Saving…' : 'Save Invoice'}
+      {saving ? "Saving..." : "Save Invoice"}
     </button>
     <button
       type="button"
@@ -15,6 +15,16 @@ const Toolbar = ({ onSave, onPrint, saving }) => (
     >
       Print / PDF
     </button>
+    {onSharePdf && (
+      <button
+        type="button"
+        onClick={onSharePdf}
+        disabled={saving || sharing}
+        className="bg-green-700 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 disabled:opacity-60 transition-colors"
+      >
+        {sharing ? "Preparing..." : "Share PDF"}
+      </button>
+    )}
   </div>
 );
 
