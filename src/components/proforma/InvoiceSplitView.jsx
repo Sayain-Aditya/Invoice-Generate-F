@@ -130,6 +130,7 @@ export default function InvoiceSplitView() {
   const [sharing, setSharing] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [logo, setLogo] = useState(null);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [mobileTab, setMobileTab] = useState("form");
   const autoSaveTimer = useRef(null);
   const isFirstRender = useRef(true);
@@ -145,15 +146,29 @@ export default function InvoiceSplitView() {
       setDocId(_id);
       docIdRef.current = _id;
       skipNextAutosave.current = true;
+      if (rest.logo) setLogo(rest.logo);
     }).catch(() => setSaveMsg("Failed to load invoice"));
   }, [id]);
 
-  const handleLogoUpload = (e) => {
+  const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setLogo(ev.target.result);
-    reader.readAsDataURL(file);
+    setLogoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setLogo(data.url);
+    } catch (err) {
+      setSaveMsg('Logo upload failed: ' + err.message);
+    } finally {
+      setLogoUploading(false);
+    }
   };
 
   const updateTo = (k, v) => setData((d) => ({ ...d, to: { ...d.to, [k]: v } }));
@@ -211,7 +226,7 @@ export default function InvoiceSplitView() {
   const doSave = async ({ throwOnError = false } = {}) => {
     setSaving(true); setSaveMsg("");
     try {
-      const payload = { ...data, totals: calc, amountInWords };
+      const payload = { ...data, logo, totals: calc, amountInWords };
       if (docIdRef.current) {
         const updated = await updateProforma(docIdRef.current, payload);
         setSaveMsg("Saved");
@@ -348,7 +363,13 @@ export default function InvoiceSplitView() {
         <div className="mb-4">
           <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2 border-b border-gray-200 pb-1">Logo</div>
           <label className="block text-[11px] font-semibold text-gray-700 mb-1">Upload Company Logo</label>
-          <input type="file" accept="image/*" onChange={handleLogoUpload} className="w-full text-[12px] text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+          <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={logoUploading} className="w-full text-[12px] text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50" />
+          {logoUploading && (
+            <div className="mt-2 text-[11px] text-blue-600 font-medium flex items-center gap-1">
+              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              Uploading logo…
+            </div>
+          )}
           {logo && (
             <div className="mt-2 flex items-center gap-2">
               <img src={logo} alt="logo preview" className="h-10 object-contain border border-gray-200 rounded p-1" />
