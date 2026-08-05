@@ -639,7 +639,7 @@ export default function InvoiceSplitView() {
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.total)}</td>
             </tr>
             <tr>
-              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}} colSpan={3}>R/o</td>
+              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}} colSpan={3}>Round Off</td>
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.rounded)}</td>
             </tr>
             <tr>
@@ -651,11 +651,11 @@ export default function InvoiceSplitView() {
           <table className="w-full" style={{borderCollapse:'collapse'}}><tbody>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap', fontWeight:'600', width:'130px'}}>Other Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.otherTerms}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Delivery:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.delivery}</td></tr>
-            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Freight: Extra</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.freight}</td></tr>
+            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Freight: Extra</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'start'}}>{data.freight}</td></tr>
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Payment Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{highlightAccountNumber(data.paymentTerms)}</td></tr>
-            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Validity:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.validity}</td></tr>
-            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Insurance & Rto:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.insuranceRto}</td></tr>
-            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Warranty:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'center'}}>{data.warranty}</td></tr>
+            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Validity:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'start'}}>{data.validity}</td></tr>
+            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Insurance & Rto:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'start'}}>{data.insuranceRto}</td></tr>
+            <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Warranty:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'start'}}>{data.warranty}</td></tr>
           </tbody></table>
 
           <div className="px-3.5 py-2.5 font-semibold">For: {data.footerCompany}</div>
