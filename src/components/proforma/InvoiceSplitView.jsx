@@ -1,5 +1,6 @@
 ﻿import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import mksLogo from "../../assets/Logo.jpeg";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { saveProforma, getProforma, updateProforma } from "../../api/proformaInvoiceApi";
@@ -551,9 +552,10 @@ export default function InvoiceSplitView() {
 
         <div ref={printAreaRef} className="w-full max-w-[900px] bg-white border border-black text-xs text-gray-900 print:w-auto print-area">
           <div className="flex justify-between items-center px-4 py-3 border-b border-black">
-            <div>
-              <div className="text-[11px] font-medium">Authorised Dealer</div>
-              <div className="text-2xl font-extrabold tracking-wide mt-0.5">MKS</div>
+            <div className="flex flex-col items-center" style={{gap:0, lineHeight:1}}>
+              <div className="text-[11px] font-medium" style={{marginBottom:'-6px'}}>Authorised Dealer</div>
+              <img src={mksLogo} alt="MKS Logo" className="h-14 w-14 object-contain" style={{margin:0}} />
+              <div className="text-2xl font-extrabold tracking-wide" style={{marginTop:'-8px'}}>MKS</div>
             </div>
             <div className="text-right">
               {logo ? (
@@ -613,18 +615,17 @@ export default function InvoiceSplitView() {
 
           <table className="w-full" style={{borderCollapse:'collapse'}}><tbody>
             <tr>
-              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center'}} colSpan={2}>IGST</td>
+              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', width:'130px'}} colSpan={2}>IGST</td>
               <td style={{border:'1px solid black', padding:'4px 8px', width:'90px'}}>{data.igstPercent}%</td>
               <td style={{border:'1px solid black', padding:'4px 8px', width:'130px', textAlign:'right'}}>{data.gstType === "igst" ? inr2(calc.igst) : ""}</td>
             </tr>
             <tr>
-              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', width:'130px'}} rowSpan={2}>CGST</td>
-              <td style={{border:'1px solid black', padding:'4px 8px'}}></td>
+              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', width:'130px'}} colSpan={2}>CGST</td>
               <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.cgstPercent}%</td>
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{data.gstType === "split" ? inr2(calc.cgst) : ""}</td>
             </tr>
             <tr>
-              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center'}}>SGST</td>
+              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center'}} colSpan={2}>SGST</td>
               <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.sgstPercent}%</td>
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{data.gstType === "split" ? inr2(calc.sgst) : ""}</td>
             </tr>
@@ -642,7 +643,7 @@ export default function InvoiceSplitView() {
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.rounded)}</td>
             </tr>
             <tr>
-              <td style={{border:'1px solid black', padding:'4px 8px', fontWeight:'bold', width:'90px'}}>Total In words</td>
+              <td style={{border:'1px solid black', padding:'4px 8px', fontWeight:'bold'}}>Total In words</td>
               <td style={{border:'1px solid black', padding:'4px 8px'}} colSpan={3}>{amountInWords}</td>
             </tr>
           </tbody></table>
