@@ -1,6 +1,7 @@
 ﻿import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import mksLogo from "../../assets/Logo.jpeg";
+import kubotaLogo from "../../assets/Logo Escorts Kubota.png";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { saveProforma, getProforma, updateProforma } from "../../api/proformaInvoiceApi";
@@ -579,13 +580,7 @@ export default function InvoiceSplitView() {
               <div className="text-2xl font-extrabold tracking-wide" style={{marginTop:'-8px'}}>MKS</div>
             </div>
             <div className="text-right">
-              {logo ? (
-                <img src={logo} alt="logo" className="h-16 object-contain ml-auto" />
-              ) : (
-                <div className="font-bold text-base">
-                  Kubota<br /><span className="text-[10px] font-normal">Escorts Kubota Limited</span>
-                </div>
-              )}
+              <img src={logo || kubotaLogo} alt="Escorts Kubota" className="h-16 object-contain ml-auto" />
             </div>
           </div>
           <div className="text-center font-bold text-sm p-1.5 border-b border-black">QUOTATION/PROFORMA INVOICE</div>
