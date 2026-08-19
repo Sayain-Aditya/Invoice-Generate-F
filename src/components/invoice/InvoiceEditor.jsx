@@ -6,6 +6,7 @@ import FormField from '../shared/FormField';
 import Toolbar from '../shared/Toolbar';
 import { getNextInvoiceNumber, saveInvoice, updateInvoice, getInvoice } from '../../api/invoiceApi';
 import { calculateTotals } from '../../utils/calculations';
+import kubotaLogo from '../../assets/Logo Escorts Kubota.png';
 
 const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 focus:border-blue-900';
 
@@ -209,7 +210,7 @@ const InvoiceEditor = ({ invoiceId }) => {
           <div className="text-sm text-gray-800">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <p className="text-xl font-extrabold text-blue-900">{invoice.companyName}</p>
+                <img src={kubotaLogo} alt="Escorts Kubota" className="h-12 w-auto mb-1" />
                 <p className="text-gray-500 text-xs mt-1">Invoice #{invoice.invoiceNumber}</p>
               </div>
               <div className="text-right text-xs text-gray-500">
