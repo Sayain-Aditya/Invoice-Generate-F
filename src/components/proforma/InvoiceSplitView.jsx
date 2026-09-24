@@ -525,19 +525,19 @@ export default function InvoiceSplitView() {
         </div>
 
         <div className="mb-4">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2 border-b border-gray-200 pb-1">Footer / Company (Fixed)</div>
+          <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2 border-b border-gray-200 pb-1">Footer / Company</div>
           {[
             { label: "Company", value: data.footerCompany },
             { label: "Address", value: data.footerAddress },
             { label: "GST No", value: data.footerGst },
-            { label: "Email", value: data.footerEmail },
-            { label: "Mobile", value: data.footerMobile },
           ].map(({ label, value }) => (
             <div key={label} className="mb-2">
               <label className="block text-[11px] font-semibold text-gray-700 mb-0.5">{label}</label>
               <div className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[12px] text-gray-600 bg-gray-50">{value}</div>
             </div>
           ))}
+          <Row label="Email"><Input value={data.footerEmail} onChange={(e) => setData((d) => ({ ...d, footerEmail: e.target.value }))} /></Row>
+          <Row label="Mobile"><Input value={data.footerMobile} onChange={(e) => setData((d) => ({ ...d, footerMobile: e.target.value }))} /></Row>
         </div>
       </div>
 
