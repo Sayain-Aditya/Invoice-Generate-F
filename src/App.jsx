@@ -25,7 +25,7 @@ const Nav = () => {
     <header className="bg-blue-900 text-white shadow-md print:hidden">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="text-xl font-bold tracking-tight">
-          MKS Alliance <span className="text-blue-300 font-normal text-base">Invoices</span>
+          MKS Alliance LLP <span className="text-blue-300 font-normal text-base">Invoices</span>
         </Link>
         {/* Desktop nav */}
         <nav className="hidden sm:flex gap-1">

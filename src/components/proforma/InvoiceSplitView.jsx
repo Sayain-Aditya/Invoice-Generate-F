@@ -26,11 +26,13 @@ function twoDigits(n) { if (n < 20) return onesWords[n]; return tensWords[Math.f
 function numberToWordsLakh(num) {
   num = Math.round(num);
   if (num === 0) return "ZERO";
+  const crore = Math.floor(num / 10000000); num %= 10000000;
   const lakh = Math.floor(num / 100000); num %= 100000;
   const thousand = Math.floor(num / 1000); num %= 1000;
   const hundred = num;
   let parts = [];
-  if (lakh) parts.push((lakh < 20 ? onesWords[lakh] : twoDigits(lakh)) + "-LAKH" + (lakh > 1 ? "S" : ""));
+  if (crore) parts.push((crore < 20 ? onesWords[crore] : twoDigits(crore)) + " CRORE" + (crore > 1 ? "S" : ""));
+  if (lakh) parts.push((lakh < 20 ? onesWords[lakh] : twoDigits(lakh)) + " LAKH" + (lakh > 1 ? "S" : ""));
   if (thousand) parts.push((thousand < 20 ? onesWords[thousand] : twoDigits(thousand)) + " THOUSAND");
   if (hundred) parts.push((hundred < 100 ? twoDigits(hundred) : Math.floor(hundred / 100) + " HUNDRED " + twoDigits(hundred % 100)));
   return parts.join(" ").trim();
@@ -576,8 +578,8 @@ export default function InvoiceSplitView() {
           <div className="flex justify-between items-center px-4 py-3 border-b border-black">
             <div className="flex flex-col items-center" style={{gap:0, lineHeight:1}}>
               <div className="text-[11px] font-medium" style={{marginBottom:'-6px'}}>Authorised Dealer</div>
-              <img src={mksLogo} alt="MKS Logo" className="h-14 w-14 object-contain" style={{margin:0}} />
-              <div className="text-2xl font-extrabold tracking-wide" style={{marginTop:'-8px'}}>MKS</div>
+              <img src={mksLogo} alt="MKS Logo" className="h-16 w-16 object-contain" style={{margin:0}} />
+              <div className="text-lg font-extrabold tracking-wide" style={{marginTop:'-8px'}}>MKS Alliance LLP</div>
             </div>
             <div className="text-right">
               <img src={logo || kubotaLogo} alt="Escorts Kubota" className="h-16 object-contain ml-auto" />
