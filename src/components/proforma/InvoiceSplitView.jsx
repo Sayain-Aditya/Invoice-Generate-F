@@ -2,6 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import mksLogo from "../../assets/Logo.jpeg";
 import kubotaLogo from "../../assets/Logo Escorts Kubota.png";
+import CompanyStamp from "../shared/CompanyStamp";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { saveProforma, getProforma, updateProforma } from "../../api/proformaInvoiceApi";
@@ -676,7 +677,10 @@ export default function InvoiceSplitView() {
             <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Warranty:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', textAlign:'start'}}>{data.warranty}</td></tr>
           </tbody></table>
 
-          <div className="px-3.5 py-2.5 font-semibold">For: {data.footerCompany}</div>
+          <div className="px-3.5 py-2.5 font-semibold relative">
+            <span>For: {data.footerCompany}</span>
+            <div className="absolute top-1 left-3.5 pointer-events-none"><CompanyStamp size={130} opacity={0.9} /></div>
+          </div>
           <div className="text-center p-3.5">
             <div className="font-extrabold text-sm">{data.footerCompany}</div>
             <div className="text-[10.5px] mt-0.5">{data.footerAddress}</div>
