@@ -70,7 +70,7 @@ const highlightAccountNumber = (text) => {
 const initialData = {
   refNo: "",
   date: today,
-  to: { name: "", address: "", mob: "", email: "", gst: "" },
+  to: { name: "", address: "", mob: "", email: "", gst: "", aadhar: "", pan: "" },
   billingFrom: "",
   shipTo: { name: "", address: "" },
   hpn: "",
@@ -396,6 +396,8 @@ export default function InvoiceSplitView() {
           <Row label="Mobile"><Input value={data.to.mob} onChange={(e) => updateTo("mob", e.target.value)} /></Row>
           <Row label="Email"><Input value={data.to.email} onChange={(e) => updateTo("email", e.target.value)} /></Row>
           <Row label="GST No"><Input value={data.to.gst} onChange={(e) => updateTo("gst", e.target.value)} /></Row>
+          <Row label="Aadhar No"><Input value={data.to.aadhar} onChange={(e) => updateTo("aadhar", e.target.value)} /></Row>
+          <Row label="PAN No"><Input value={data.to.pan} onChange={(e) => updateTo("pan", e.target.value)} /></Row>
         </div>
 
         <div className="mb-4">
@@ -597,6 +599,8 @@ export default function InvoiceSplitView() {
                 <div><span className="font-semibold">Mob. No.</span> {data.to.mob}</div>
                 <div><span className="font-semibold">Email:</span> {data.to.email}</div>
                 <div><span className="font-semibold">GST No.</span> {data.to.gst}</div>
+                {data.to.aadhar && <div><span className="font-semibold">Aadhar No.</span> {data.to.aadhar}</div>}
+                {data.to.pan && <div><span className="font-semibold">PAN No.</span> {data.to.pan}</div>}
               </td>
               <td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>
                 <div><span className="font-semibold">Reference No:</span> {data.refNo}</div>
