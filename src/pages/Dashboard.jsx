@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getInvoices, deleteInvoice, saveInvoice } from '../api/invoiceApi';
 import { getProformas, deleteProforma, getProforma } from '../api/proformaInvoiceApi';
-import stampImg from '../assets/stamp.png';
-import mksLogo from '../assets/Logo.jpeg';
-import kubotaLogo from '../assets/Logo Escorts Kubota.png';
+import { ProformaPreviewContent } from '../components/proforma/InvoiceSplitView';
 
 const statusColor = (s) => ({
   draft: 'bg-yellow-100 text-yellow-800',
@@ -15,107 +13,38 @@ const statusColor = (s) => ({
 const inr2 = (n) => (isNaN(n) ? 0 : n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const ProformaViewModal = ({ id, onClose }) => {
-  const [data, setData] = useState(null);
+  const [raw, setRaw] = useState(null);
 
   useEffect(() => {
-    getProforma(id).then(setData).catch(console.error);
+    getProforma(id).then(setRaw).catch(console.error);
   }, [id]);
 
-  if (!data) return (
+  const calc = useMemo(() => {
+    if (!raw?.totals) return { rows: [], igst: 0, cgst: 0, sgst: 0, tcs: 0, total: 0, rounded: 0 };
+    return raw.totals;
+  }, [raw]);
+
+  if (!raw) return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
       <div className="bg-white rounded-xl p-8 text-gray-500 text-sm">Loading…</div>
     </div>
   );
 
-  const t = data.totals || {};
-
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0" onClick={onClose} />
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto z-10">
         <div className="flex justify-between items-center px-5 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
-          <span className="font-bold text-gray-800">Preview — {data.refNo || 'Proforma'}</span>
+          <span className="font-bold text-gray-800">Preview — {raw.refNo || 'Proforma'}</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
         </div>
-        <div className="p-4 text-xs text-gray-900">
-          {/* Header */}
-          <div className="flex justify-between items-center border border-black px-4 py-3 mb-0">
-            <div className="flex flex-col items-center" style={{ gap: 0, lineHeight: 1 }}>
-              <div className="text-[11px] font-medium" style={{ marginBottom: '-6px' }}>Authorised Dealer</div>
-              <img src={mksLogo} alt="MKS" className="h-14 w-14 object-contain" style={{ margin: 0 }} />
-              <div className="text-2xl font-extrabold tracking-wide" style={{ marginTop: '-8px' }}>MKS</div>
-            </div>
-            <img src={data.logo || kubotaLogo} alt="Kubota" className="h-16 object-contain" />
-          </div>
-          <div className="text-center font-bold text-sm p-1.5 border border-t-0 border-black">QUOTATION/PROFORMA INVOICE</div>
-
-          {/* To / Ship */}
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}><tbody>
-            <tr>
-              <td style={{ border: '1px solid black', padding: '6px 8px', verticalAlign: 'top', width: '55%' }}>
-                <div className="font-semibold">To,</div>
-                <div className="font-bold">{data.to?.name}</div>
-                <div><span className="font-semibold">ADD:</span> {data.to?.address}</div>
-                <div><span className="font-semibold">Mob:</span> {data.to?.mob}</div>
-                <div><span className="font-semibold">Email:</span> {data.to?.email}</div>
-                <div><span className="font-semibold">GST No.</span> {data.to?.gst}</div>
-                {data.to?.aadhar && <div><span className="font-semibold">Aadhar No.</span> {data.to.aadhar}</div>}
-                {data.to?.pan && <div><span className="font-semibold">PAN No.</span> {data.to.pan}</div>}
-              </td>
-              <td style={{ border: '1px solid black', padding: '6px 8px', verticalAlign: 'top' }}>
-                <div><span className="font-semibold">Reference No:</span> {data.refNo}</div>
-                <div><span className="font-semibold">Date:</span> {data.date}</div>
-                <div className="mt-2 font-semibold">Ship to Party Address–</div>
-                <div className="font-bold">{data.shipTo?.name}</div>
-                <div><span className="font-semibold">ADD:</span> {data.shipTo?.address}</div>
-              </td>
-            </tr>
-            <tr>
-              <td style={{ border: '1px solid black', padding: '6px 8px' }}><span className="font-semibold">Billing From:</span> {data.billingFrom}</td>
-              <td style={{ border: '1px solid black', padding: '6px 8px' }}><span className="font-semibold">HPN:</span> {data.hpn}</td>
-            </tr>
-          </tbody></table>
-
-          {/* Items */}
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}><thead><tr>
-            <th style={{ border: '1px solid black', padding: '4px 6px', background: '#f3f4f6', textAlign: 'center', width: '90px' }}>HSN</th>
-            <th style={{ border: '1px solid black', padding: '4px 6px', background: '#f3f4f6' }}>Description</th>
-            <th style={{ border: '1px solid black', padding: '4px 6px', background: '#f3f4f6', textAlign: 'center', width: '40px' }}>Qty</th>
-            <th style={{ border: '1px solid black', padding: '4px 6px', background: '#f3f4f6', textAlign: 'right', width: '90px' }}>Unit Price</th>
-            <th style={{ border: '1px solid black', padding: '4px 6px', background: '#f3f4f6', textAlign: 'right', width: '70px' }}>Discount</th>
-            <th style={{ border: '1px solid black', padding: '4px 6px', background: '#f3f4f6', textAlign: 'right', width: '100px' }}>Total</th>
-          </tr></thead><tbody>
-            {(t.rows || []).map((it, idx) => (
-              <tr key={idx}>
-                <td style={{ border: '1px solid black', padding: '4px 6px', textAlign: 'center' }}>{it.hsn}</td>
-                <td style={{ border: '1px solid black', padding: '4px 6px' }}>{it.description}</td>
-                <td style={{ border: '1px solid black', padding: '4px 6px', textAlign: 'center' }}>{it.qty}</td>
-                <td style={{ border: '1px solid black', padding: '4px 6px', textAlign: 'right' }}>{inr2(it.unitPrice)}</td>
-                <td style={{ border: '1px solid black', padding: '4px 6px', textAlign: 'right' }}>{inr2(it.discount)}</td>
-                <td style={{ border: '1px solid black', padding: '4px 6px', textAlign: 'right' }}>{inr2(it.totalPrice)}</td>
-              </tr>
-            ))}
-          </tbody></table>
-
-          {/* Totals */}
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}><tbody>
-            <tr><td style={{ border: '1px solid black', padding: '4px 8px', textAlign: 'right', fontWeight: 'bold' }} colSpan={3}>Total</td><td style={{ border: '1px solid black', padding: '4px 8px', textAlign: 'right', fontWeight: 'bold' }}>{inr2(t.total)}</td></tr>
-            <tr><td style={{ border: '1px solid black', padding: '4px 8px', textAlign: 'right', fontWeight: 'bold' }} colSpan={3}>Round Off</td><td style={{ border: '1px solid black', padding: '4px 8px', textAlign: 'right', fontWeight: 'bold' }}>{inr2(t.rounded)}</td></tr>
-            <tr><td style={{ border: '1px solid black', padding: '4px 8px', fontWeight: 'bold' }}>Total In Words</td><td style={{ border: '1px solid black', padding: '4px 8px' }} colSpan={3}>{data.amountInWords}</td></tr>
-          </tbody></table>
-
-          {/* Footer */}
-          <div className="px-3.5 py-2.5 font-semibold relative border-t border-black">
-            <span>For: {data.footerCompany}</span>
-            <div className="absolute top-1 left-3.5 pointer-events-none">
-              <img src={stampImg} alt="stamp" width={130} style={{ opacity: 0.9 }} />
-            </div>
-          </div>
-          <div className="text-center p-3 border-t border-black">
-            <div className="font-extrabold text-sm">{data.footerCompany}</div>
-            <div className="text-[10.5px] mt-0.5">{data.footerAddress}</div>
-            <div className="text-[10.5px] mt-0.5">{data.footerGst}</div>
-            <div className="text-[10.5px] mt-0.5">{data.footerEmail} MobileNo.: {data.footerMobile}</div>
-          </div>
+        <div className="p-4">
+          <ProformaPreviewContent
+            data={raw}
+            calc={calc}
+            amountInWords={raw.amountInWords}
+            logo={raw.logo}
+          />
         </div>
       </div>
     </div>

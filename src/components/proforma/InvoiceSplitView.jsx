@@ -124,6 +124,126 @@ function TextArea(props) {
   );
 }
 
+export function ProformaPreviewContent({ data, calc, amountInWords, logo }) {
+  return (
+    <div className="w-full bg-white border border-black text-xs text-gray-900">
+      <div className="flex justify-between items-center px-4 py-3 border-b border-black">
+        <div className="flex flex-col items-center" style={{gap:0, lineHeight:1}}>
+          <div className="text-[11px] font-medium" style={{marginBottom:'-6px'}}>Authorised Dealer</div>
+          <img src={mksLogo} alt="MKS Logo" className="h-16 w-16 object-contain" style={{margin:0}} />
+          <div className="text-lg font-extrabold tracking-wide" style={{marginTop:'-8px'}}>MKS Alliance LLP</div>
+        </div>
+        <div className="text-right">
+          <img src={logo || kubotaLogo} alt="Escorts Kubota" className="h-16 object-contain ml-auto" />
+        </div>
+      </div>
+      <div className="text-center font-bold text-sm p-1.5 border-b border-black">QUOTATION/PROFORMA INVOICE</div>
+
+      <table className="w-full" style={{borderCollapse:'collapse'}}><tbody>
+        <tr>
+          <td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap', width:'55%'}}>
+            <div className="font-semibold">To,</div>
+            <div className="font-bold">{data.to.name}</div>
+            <div><span className="font-semibold">ADD:</span> {data.to.address}</div>
+            <div><span className="font-semibold">Mob. No.</span> {data.to.mob}</div>
+            <div><span className="font-semibold">Email:</span> {data.to.email}</div>
+            <div><span className="font-semibold">GST No.</span> {data.to.gst}</div>
+            {data.to.aadhar && <div><span className="font-semibold">Aadhar No.</span> {data.to.aadhar}</div>}
+            {data.to.pan && <div><span className="font-semibold">PAN No.</span> {data.to.pan}</div>}
+          </td>
+          <td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>
+            <div><span className="font-semibold">Reference No:</span> {data.refNo}</div>
+            <div><span className="font-semibold">Date:</span> {data.date}</div>
+            <div className="mt-2.5 font-semibold">Ship to Party Address-</div>
+            <div className="font-bold">{data.shipTo.name}</div>
+            <div><span className="font-semibold">ADD:</span> {data.shipTo.address}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top'}}><span className="font-semibold">Billing From:</span> {data.billingFrom}</td>
+          <td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top'}}><span className="font-semibold">HPN:</span> {data.hpn}</td>
+        </tr>
+      </tbody></table>
+
+      <table className="w-full" style={{borderCollapse:'collapse'}}><thead><tr>
+        <th style={{border:'1px solid black', padding:'4px 6px', background:'#f3f4f6', textAlign:'center', width:'90px', fontSize:'10px'}}>HSN Code</th>
+        <th style={{border:'1px solid black', padding:'4px 6px', background:'#f3f4f6', textAlign:'center', fontSize:'10px'}}>Item Description</th>
+        <th style={{border:'1px solid black', padding:'4px 6px', background:'#f3f4f6', textAlign:'center', width:'40px', fontSize:'10px'}}>Qty</th>
+        <th style={{border:'1px solid black', padding:'4px 6px', background:'#f3f4f6', textAlign:'center', width:'90px', fontSize:'10px'}}>Unit Price</th>
+        <th style={{border:'1px solid black', padding:'4px 6px', background:'#f3f4f6', textAlign:'center', width:'70px', fontSize:'10px'}}>Discount</th>
+        <th style={{border:'1px solid black', padding:'4px 6px', background:'#f3f4f6', textAlign:'center', width:'100px', fontSize:'10px'}}>Total Price</th>
+      </tr></thead><tbody>
+        {(calc.rows || []).map((it, idx) => (
+          <tr key={idx}>
+            <td style={{border:'1px solid black', padding:'4px 6px', textAlign:'center'}}>{it.hsn}</td>
+            <td style={{border:'1px solid black', padding:'4px 6px'}}>{it.description}</td>
+            <td style={{border:'1px solid black', padding:'4px 6px', textAlign:'center'}}>{it.qty}</td>
+            <td style={{border:'1px solid black', padding:'4px 6px', textAlign:'right'}}>{inr2(it.unitPrice)}</td>
+            <td style={{border:'1px solid black', padding:'4px 6px', textAlign:'right'}}>{inr2(it.discount)}</td>
+            <td style={{border:'1px solid black', padding:'4px 6px', textAlign:'right'}}>{inr2(it.totalPrice)}</td>
+          </tr>
+        ))}
+      </tbody></table>
+
+      <table className="w-full" style={{borderCollapse:'collapse'}}><tbody>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', width:'130px'}} colSpan={2}>IGST</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', width:'90px'}}>{data.igstPercent}%</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', width:'130px', textAlign:'right'}}>{data.gstType === "igst" ? inr2(calc.igst) : ""}</td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', width:'130px'}} colSpan={2}>CGST</td>
+          <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.cgstPercent}%</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{data.gstType === "split" ? inr2(calc.cgst) : ""}</td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center'}} colSpan={2}>SGST</td>
+          <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.sgstPercent}%</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{data.gstType === "split" ? inr2(calc.sgst) : ""}</td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center'}} colSpan={2}>TCS</td>
+          <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.tcsPercent}%</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{inr2(calc.tcs)}</td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}} colSpan={3}>Total</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.total)}</td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}} colSpan={3}>Round Off</td>
+          <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.rounded)}</td>
+        </tr>
+        <tr>
+          <td style={{border:'1px solid black', padding:'4px 8px', fontWeight:'bold'}}>Total In words</td>
+          <td style={{border:'1px solid black', padding:'4px 8px'}} colSpan={3}>{amountInWords}</td>
+        </tr>
+      </tbody></table>
+
+      <table className="w-full" style={{borderCollapse:'collapse'}}><tbody>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap', fontWeight:'600', width:'130px'}}>Other Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.otherTerms}</td></tr>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Delivery:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{data.delivery}</td></tr>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Freight: Extra</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top'}}>{data.freight}</td></tr>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Payment Terms:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', whiteSpace:'pre-wrap'}}>{highlightAccountNumber(data.paymentTerms)}</td></tr>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Validity:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top'}}>{data.validity}</td></tr>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Insurance & Rto:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top'}}>{data.insuranceRto}</td></tr>
+        <tr><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top', fontWeight:'600'}}>Warranty:</td><td style={{border:'1px solid black', padding:'6px 8px', verticalAlign:'top'}}>{data.warranty}</td></tr>
+      </tbody></table>
+
+      <div className="px-3.5 py-2.5 font-semibold relative">
+        <span>For: {data.footerCompany}</span>
+        <div className="absolute top-1 left-3.5 pointer-events-none"><CompanyStamp size={130} opacity={0.9} /></div>
+      </div>
+      <div className="text-center p-3.5">
+        <div className="font-extrabold text-sm">{data.footerCompany}</div>
+        <div className="text-[10.5px] mt-0.5">{data.footerAddress}</div>
+        <div className="text-[10.5px] mt-0.5">{data.footerGst}</div>
+        <div className="text-[10.5px] mt-0.5">{data.footerEmail} MobileNo.: {data.footerMobile}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function InvoiceSplitView() {
   const { id } = useParams();
   const navigate = useNavigate();
