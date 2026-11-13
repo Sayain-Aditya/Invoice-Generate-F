@@ -19,6 +19,11 @@ const defaultInvoice = {
   items: [{ description: '', quantity: 1, rate: 0, amount: 0 }],
   subtotal: 0,
   tax: 0,
+  igst: 0,
+  cgst: 0,
+  sgst: 0,
+  tcs: 0,
+  rto: 0,
   total: 0,
   notes: '',
   status: 'draft',
@@ -33,10 +38,10 @@ const InvoiceEditor = ({ invoiceId }) => {
 
   useEffect(() => {
     if (!invoiceId) {
-      getNextInvoiceNumber().then((d) => setInvoice((p) => ({ ...p, invoiceNumber: d.nextInvoiceNumber }))).catch(console.error);
+      getNextInvoiceNumber().then((d) => setInvoice((p) => calculateTotals({ ...p, invoiceNumber: d.nextInvoiceNumber }))).catch(console.error);
       return;
     }
-    getInvoice(invoiceId).then(setInvoice).catch(console.error);
+    getInvoice(invoiceId).then((data) => setInvoice(calculateTotals(data))).catch(console.error);
   }, [invoiceId]);
 
   useEffect(() => {
@@ -194,11 +199,6 @@ const InvoiceEditor = ({ invoiceId }) => {
             + Add Item
           </button>
 
-          <div className="grid grid-cols-2 gap-x-4 mt-4">
-            <FormField label="Tax %">
-              <input type="number" min="0" step="0.1" className={inputCls} value={invoice.tax} onChange={(e) => updateField('tax', Number(e.target.value))} />
-            </FormField>
-          </div>
           <FormField label="Notes">
             <textarea className={`${inputCls} min-h-[80px] resize-y`} value={invoice.notes} onChange={(e) => updateField('notes', e.target.value)} />
           </FormField>
@@ -244,7 +244,16 @@ const InvoiceEditor = ({ invoiceId }) => {
 
             <div className="border-t border-gray-200 pt-3 space-y-1.5 text-xs">
               <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{invoice.subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-gray-600"><span>Tax ({invoice.tax}%)</span><span>{((invoice.subtotal * invoice.tax) / 100).toFixed(2)}</span></div>
+              <table className="w-full text-xs text-gray-600" style={{tableLayout:'fixed'}}>
+                <colgroup><col style={{width:'50%'}}/><col style={{width:'20%'}}/><col style={{width:'30%'}}/></colgroup>
+                <tbody>
+                  <tr><td>IGST</td><td>18%</td><td className="text-right">{invoice.igst.toFixed(2)}</td></tr>
+                  <tr><td>CGST</td><td>9%</td><td className="text-right">{invoice.cgst.toFixed(2)}</td></tr>
+                  <tr><td>SGST</td><td>9%</td><td className="text-right">{invoice.sgst.toFixed(2)}</td></tr>
+                  <tr><td>TCS</td><td>1%</td><td className="text-right">{invoice.tcs.toFixed(2)}</td></tr>
+                  <tr><td>RTO</td><td>6%</td><td className="text-right">{invoice.rto.toFixed(2)}</td></tr>
+                </tbody>
+              </table>
               <div className="flex justify-between font-bold text-base text-gray-900 pt-2 border-t border-gray-200">
                 <span>Total</span><span>₹{invoice.total.toFixed(2)}</span>
               </div>

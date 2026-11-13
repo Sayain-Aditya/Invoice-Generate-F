@@ -74,6 +74,8 @@ const initialData = {
   billingFrom: "",
   shipTo: { name: "", address: "" },
   hpn: "",
+  showRto: false,
+  rto: "",
   items: [{ hsn: "", description: "", qty: 1, unitPrice: 0, finalPrice: "", discount: 0, priceSource: "unit" }],
   gstType: "split",
   cgstPercent: 9,
@@ -206,6 +208,13 @@ export function ProformaPreviewContent({ data, calc, amountInWords, logo }) {
           <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.tcsPercent}%</td>
           <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{inr2(calc.tcs)}</td>
         </tr>
+        {data.showRto && (
+          <tr>
+            <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', fontWeight:'600'}} colSpan={2}>RTO</td>
+            <td style={{border:'1px solid black', padding:'4px 8px'}}>6%</td>
+            <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{inr2(calc.rto)}</td>
+          </tr>
+        )}
         <tr>
           <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}} colSpan={3}>Total</td>
           <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.total)}</td>
@@ -332,8 +341,10 @@ export default function InvoiceSplitView() {
     const preTcsTotal = subtotal + gstTotal;
     const tcs = (preTcsTotal * num(data.tcsPercent)) / 100;
     const total = preTcsTotal + tcs;
-    const rounded = data.roundedTotal !== "" ? num(data.roundedTotal) : Math.round(total / 100) * 100;
-    return { rows, subtotal, cgst, sgst, igst, gstTotal, tcs, total, rounded, totalGstPercent, priceDivisor };
+    const rto = data.showRto ? total * 0.06 : 0;
+    const grandTotal = total + rto;
+    const rounded = data.roundedTotal !== "" ? num(data.roundedTotal) : Math.round(grandTotal / 100) * 100;
+    return { rows, subtotal, cgst, sgst, igst, gstTotal, tcs, rto, total: grandTotal, rounded, totalGstPercent, priceDivisor };
   }, [data.items, data.gstType, data.cgstPercent, data.sgstPercent, data.igstPercent, data.tcsPercent, data.roundedTotal]);
 
   const amountInWords = "RUPEES - " + numberToWordsLakh(calc.rounded) + " ONLY.";
@@ -556,6 +567,10 @@ export default function InvoiceSplitView() {
             }} /></Row>
           )}
           <Row label="TCS %"><Input type="number" value={data.tcsPercent} onChange={(e) => setData((d) => ({ ...d, tcsPercent: e.target.value }))} /></Row>
+          <div className="mb-2 flex items-center gap-2">
+            <input type="checkbox" id="showRto" checked={!!data.showRto} onChange={(e) => setData((d) => ({ ...d, showRto: e.target.checked }))} className="w-4 h-4 accent-blue-900 cursor-pointer" />
+            <label htmlFor="showRto" className="text-[11px] font-semibold text-gray-700 cursor-pointer">Show RTO (6% auto)</label>
+          </div>
           <Row label={`Rounded Total (auto: ${inr2(calc.total)})`}>
             <Input type="text" inputMode="decimal" placeholder="leave blank to auto-round" value={data.roundedTotal} onChange={(e) => setData((d) => ({ ...d, roundedTotal: e.target.value }))} />
           </Row>
@@ -777,6 +792,13 @@ export default function InvoiceSplitView() {
               <td style={{border:'1px solid black', padding:'4px 8px'}}>{data.tcsPercent}%</td>
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{inr2(calc.tcs)}</td>
             </tr>
+            {data.showRto && (
+            <tr>
+              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'center', fontWeight:'600'}} colSpan={2}>RTO</td>
+              <td style={{border:'1px solid black', padding:'4px 8px'}}>6%</td>
+              <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right'}}>{inr2(calc.rto)}</td>
+            </tr>
+          )}
             <tr>
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}} colSpan={3}>Total</td>
               <td style={{border:'1px solid black', padding:'4px 8px', textAlign:'right', fontWeight:'bold'}}>{inr2(calc.total)}</td>
