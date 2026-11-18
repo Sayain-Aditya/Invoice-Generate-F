@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import mksLogo from "../../assets/Logo.jpeg";
 import kubotaLogo from "../../assets/Logo Escorts Kubota.png";
@@ -70,7 +70,7 @@ const highlightAccountNumber = (text) => {
 const initialData = {
   refNo: "",
   date: today,
-  to: { name: "", address: "", mob: "", email: "", gst: "", aadhar: "", pan: "" },
+  to: { name: "", address: "", mob: "", email: "", gst: "", salePersonName: "", salePersonContact: "", aadhar: "", pan: "" },
   billingFrom: "",
   shipTo: { name: "", address: "" },
   hpn: "",
@@ -150,6 +150,8 @@ export function ProformaPreviewContent({ data, calc, amountInWords, logo }) {
             <div><span className="font-semibold">Mob. No.</span> {data.to.mob}</div>
             <div><span className="font-semibold">Email:</span> {data.to.email}</div>
             <div><span className="font-semibold">GST No.</span> {data.to.gst}</div>
+            {data.to.salePersonName && <div><span className="font-semibold">Sale Person Name:</span> {data.to.salePersonName}</div>}
+            {data.to.salePersonContact && <div><span className="font-semibold">Sale Person Contact:</span> {data.to.salePersonContact}</div>}
             {data.to.aadhar && <div><span className="font-semibold">Aadhar No.</span> {data.to.aadhar}</div>}
             {data.to.pan && <div><span className="font-semibold">PAN No.</span> {data.to.pan}</div>}
           </td>
@@ -527,6 +529,8 @@ export default function InvoiceSplitView() {
           <Row label="Mobile"><Input value={data.to.mob} onChange={(e) => updateTo("mob", e.target.value)} /></Row>
           <Row label="Email"><Input value={data.to.email} onChange={(e) => updateTo("email", e.target.value)} /></Row>
           <Row label="GST No"><Input value={data.to.gst} onChange={(e) => updateTo("gst", e.target.value)} /></Row>
+          <Row label="Sale Person Name *"><Input required value={data.to.salePersonName} onChange={(e) => updateTo("salePersonName", e.target.value)} placeholder="Required" /></Row>
+          <Row label="Sale Person Contact *"><Input required value={data.to.salePersonContact} onChange={(e) => updateTo("salePersonContact", e.target.value)} placeholder="Required" /></Row>
           <Row label="Aadhar No"><Input value={data.to.aadhar} onChange={(e) => updateTo("aadhar", e.target.value)} /></Row>
           <Row label="PAN No"><Input value={data.to.pan} onChange={(e) => updateTo("pan", e.target.value)} /></Row>
         </div>
@@ -734,6 +738,8 @@ export default function InvoiceSplitView() {
                 <div><span className="font-semibold">Mob. No.</span> {data.to.mob}</div>
                 <div><span className="font-semibold">Email:</span> {data.to.email}</div>
                 <div><span className="font-semibold">GST No.</span> {data.to.gst}</div>
+                {data.to.salePersonName && <div><span className="font-semibold">Sale Person Name:</span> {data.to.salePersonName}</div>}
+                {data.to.salePersonContact && <div><span className="font-semibold">Sale Person Contact:</span> {data.to.salePersonContact}</div>}
                 {data.to.aadhar && <div><span className="font-semibold">Aadhar No.</span> {data.to.aadhar}</div>}
                 {data.to.pan && <div><span className="font-semibold">PAN No.</span> {data.to.pan}</div>}
               </td>
